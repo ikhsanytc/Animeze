@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   title: "Animeze | Home",
 };
 
-const Home = () => {
+const Home = async () => {
   return (
     <Provider>
       <Navbar />

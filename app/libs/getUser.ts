@@ -1,18 +1,8 @@
-import { cookies } from "next/headers";
+import { supabase } from "./supabase";
 
-function getUser() {
-  const user = cookies().get("user");
-  const session = cookies().get("session");
-  if (user && session) {
-    return {
-      user,
-      session,
-    };
-  }
-  return {
-    user: null,
-    session: null,
-  };
+async function getUser() {
+  const { data } = await supabase.auth.getUser();
+  return data.user;
 }
 
 export default getUser;

@@ -12,7 +12,6 @@ const CardAnime = () => {
   const [keyword, setKeyword] = useState("");
   const [pageFromApi, setPageFromApi] = useState<number>();
   const [page, setPage] = useState(1);
-  const [] = useState();
   const router = useRouter();
   const jikanClient = new JikanClient();
   async function request() {

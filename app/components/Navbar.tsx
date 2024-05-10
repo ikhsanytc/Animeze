@@ -4,15 +4,20 @@ import feather from "feather-icons";
 import React, { useEffect, useRef, useState } from "react";
 import { LinkNavbar } from "../types/all-types";
 import { useRouter } from "next/navigation";
+import { useCookies } from "react-cookie";
+import getUser from "../libs/getUser";
+import { supabase } from "../libs/supabase";
 
 interface Props {
   back?: string | number;
 }
 const Navbar: React.FC<Props> = ({ back }) => {
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [cookies] = useCookies(["user", "session"]);
   const router = useRouter();
   const [sidebar, setSidebar] = useState<boolean>(false);
   const [title, setTitle] = useState<string>("");
+  const [login, setLogin] = useState(false);
   function clickOutside(e: MouseEvent) {
     if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
       setSidebar(false);
@@ -21,26 +26,38 @@ const Navbar: React.FC<Props> = ({ back }) => {
   function toggleSidebar() {
     setSidebar(!sidebar);
   }
-  useEffect(() => {
-    setTitle(document.title);
-    document.addEventListener("mousedown", clickOutside);
-    return () => {
-      document.removeEventListener("mousedown", clickOutside);
-    };
-  }, []);
-  //   console.log(title.includes("Home") ? "yes" : "no");
   const links: LinkNavbar[] = [
     {
       display: "Home",
       link: "/",
     },
   ];
+  useEffect(() => {
+    setTitle(document.title);
+    getUser().then((user) => {
+      if (user) {
+        setLogin(true);
+      } else {
+        setLogin(false);
+      }
+    });
+    document.addEventListener("mousedown", clickOutside);
+    return () => {
+      document.removeEventListener("mousedown", clickOutside);
+    };
+  }, []);
+  //   console.log(title.includes("Home") ? "yes" : "no");
+
   function kembali() {
     if (back && back === -1) {
       router.back();
     } else {
       router.push(`${back}`);
     }
+  }
+  async function logout() {
+    await supabase.auth.signOut();
+    router.push("/login");
   }
   return (
     <>
@@ -69,6 +86,26 @@ const Navbar: React.FC<Props> = ({ back }) => {
               {link.display}
             </Link>
           ))}
+          {login && (
+            <a
+              onClick={logout}
+              className={`font-semibold cursor-pointer ${
+                title.includes("Logout") ? "text-white" : "hover:text-white"
+              }`}
+            >
+              Logout
+            </a>
+          )}
+          {!login && (
+            <Link
+              href="/login"
+              className={`font-semibold ${
+                title.includes("Login") ? "text-white" : "hover:text-white"
+              }`}
+            >
+              Login
+            </Link>
+          )}
         </div>
         <div
           dangerouslySetInnerHTML={{ __html: feather.icons.menu.toSvg() }}
@@ -100,6 +137,33 @@ const Navbar: React.FC<Props> = ({ back }) => {
               </button>
             </Link>
           ))}
+          {login && (
+            <button
+              onClick={logout}
+              className={`${
+                title.includes("Logout")
+                  ? "bg-gray-500"
+                  : "bg-transparent active:bg-gray-700"
+              } w-full py-2 px-3 text-left rounded-lg`}
+            >
+              Logout
+            </button>
+          )}
+          {!login && (
+            <>
+              <Link href="/login">
+                <button
+                  className={`${
+                    title.includes("Login")
+                      ? "bg-gray-500"
+                      : "bg-transparent active:bg-gray-700"
+                  } w-full py-2 px-3 text-left rounded-lg`}
+                >
+                  Login
+                </button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </>

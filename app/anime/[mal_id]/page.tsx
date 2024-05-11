@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Anime | Detail",
 };
 
-function Page({ params }: { params: { mal_id: number } }) {
+async function Page({ params }: { params: { mal_id: number } }) {
   return (
     <Provider>
       <Navbar back={-1} />

@@ -16,4 +16,11 @@ interface User {
   created_at: string;
 }
 
-export type { LinkNavbar, InputsLogin, User };
+interface Collection {
+  id: number;
+  email: string;
+  mal_id: number;
+  created_at: Date;
+}
+
+export type { LinkNavbar, InputsLogin, User, Collection };

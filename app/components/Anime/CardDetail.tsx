@@ -1,13 +1,21 @@
 "use client";
 import { Anime, AnimeCharacter, JikanClient } from "@tutkli/jikan-ts";
 import React, { useEffect, useState } from "react";
+import feather from "feather-icons";
+import { PostgrestSingleResponse, User } from "@supabase/supabase-js";
+import { Collection } from "@/app/types/all-types";
+import getUser from "@/app/libs/getUser";
+import { supabase } from "@/app/libs/supabase";
 
 interface Props {
   mal_id: number;
 }
+
 const CardDetail: React.FC<Props> = ({ mal_id }) => {
   const [anime, setAnime] = useState<Anime>();
   const [characters, setCharacters] = useState<AnimeCharacter[]>();
+  const [collection, setCollection] = useState(false);
+  const [user, setUser] = useState<User>();
   const jikanClient = new JikanClient();
   async function request() {
     const res = await jikanClient.anime.getAnimeFullById(mal_id);
@@ -17,9 +25,36 @@ const CardDetail: React.FC<Props> = ({ mal_id }) => {
     const res = await jikanClient.anime.getAnimeCharacters(mal_id);
     return res;
   }
+  async function request2() {
+    const user = await getUser();
+    if (user) {
+      const { data }: PostgrestSingleResponse<Collection> = await supabase
+        .from("collection")
+        .select()
+        .eq("email", user.email)
+        .eq("mal_id", mal_id)
+        .single();
+      return {
+        data,
+        user,
+      };
+    }
+    return {
+      data: null,
+      user,
+    };
+  }
   useEffect(() => {
     request().then((res) => setAnime(res.data));
     request1().then((res) => setCharacters(res.data));
+    request2().then((res) => {
+      if (res.data) {
+        setCollection(true);
+      }
+      if (res.user) {
+        setUser(res.user);
+      }
+    });
   }, []);
   function status(airing: boolean) {
     if (airing) {
@@ -27,6 +62,14 @@ const CardDetail: React.FC<Props> = ({ mal_id }) => {
     } else {
       return "Finished";
     }
+  }
+  async function collectionAdd() {
+    const { error } = await supabase.from("collection").insert({
+      email: user?.email,
+      mal_id,
+    });
+    if (error) console.error(error);
+    if (!error) setCollection(true);
   }
   // console.log(characters);
   return (
@@ -143,6 +186,18 @@ const CardDetail: React.FC<Props> = ({ mal_id }) => {
             </div>
           )}
           <div className="pt-10"></div>
+          {user && !collection && (
+            <div
+              className="bottom-7 right-7 fixed bg-blue-600 p-3 flex gap-3 cursor-pointer rounded-lg text-white"
+              onClick={collectionAdd}
+            >
+              <div
+                dangerouslySetInnerHTML={{ __html: feather.icons.plus.toSvg() }}
+                className=""
+              ></div>
+              <p className="hidden md:block">Add to my collection</p>
+            </div>
+          )}
         </div>
       )}
     </>
